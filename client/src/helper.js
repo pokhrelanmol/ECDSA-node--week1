@@ -4,14 +4,15 @@ import { toHex } from "ethereum-cryptography/utils.js";
 
 export const generateSignature = async (amount, recipient, privateKey) => {
     const uint8Array = Uint8Array.from([amount, recipient]);
-    const messageHash = toHex(keccak256(uint8Array));
+    const messageHash = toHex(uint8Array);
     // console.log("Message Hash = ", messageHash);
     const [signature, recovery] = await secp.sign(messageHash, privateKey, {
         recovered: true,
     });
+
     const signatureHex = toHex(signature);
+
     const recoveryBit = recovery;
-    // console.log("Signature hex = ", signatureHex);
 
     return { signatureHex, recoveryBit };
 };

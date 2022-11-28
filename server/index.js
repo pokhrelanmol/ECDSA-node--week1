@@ -26,7 +26,6 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.get("/accounts", (req, res) => {
-    console.log("hittih");
     const accounts = [
         {
             privateKey:
@@ -48,15 +47,13 @@ app.get("/accounts", (req, res) => {
             balance: balance,
         };
     });
-    console.log(accounts);
     res.json(accounts);
 });
 
 app.post("/send", (req, res) => {
     const { signature, recoveryBit, amount, recipient } = req.body;
     const uint8ArrayMsg = Uint8Array.from([amount, recipient]);
-    const messageHash = toHex(keccak256(uint8ArrayMsg));
-
+    const messageHash = toHex(uint8ArrayMsg);
     // recover public key from signature
 
     const publicKey = secp.recoverPublicKey(
@@ -69,14 +66,17 @@ app.post("/send", (req, res) => {
     const publicKeyHash = toHex(keccak256(publicKey));
     // console.log("Public key", publicKeyHash);
     const sender = `0x${publicKeyHash.slice(-20)}`; // 20 bytes address
+    console.log(sender);
     // console.log("Sender = ", sender);
-    const isSigned = secp.verify(messageHash, signature, publicKey);
+    //Verification
+    const isValidSign = secp.verify(signature, messageHash, toHex(publicKey));
 
     setInitialBalance(sender);
     setInitialBalance(recipient);
-    if (!isSigned) res.status(400).send({ message: "Invalid signature" });
     if (balances[sender] < amount) {
         res.status(400).send({ message: "Not enough funds!" });
+    } else if (!isValidSign) {
+        res.status(400).send({ message: "Invalid Signature" });
     } else {
         balances[sender] -= amount;
         balances[recipient] += amount;
