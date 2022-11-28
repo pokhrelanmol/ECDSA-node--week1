@@ -70,10 +70,11 @@ app.post("/send", (req, res) => {
     // console.log("Public key", publicKeyHash);
     const sender = `0x${publicKeyHash.slice(-20)}`; // 20 bytes address
     // console.log("Sender = ", sender);
+    const isSigned = secp.verify(messageHash, signature, publicKey);
 
     setInitialBalance(sender);
     setInitialBalance(recipient);
-
+    if (!isSigned) res.status(400).send({ message: "Invalid signature" });
     if (balances[sender] < amount) {
         res.status(400).send({ message: "Not enough funds!" });
     } else {
